@@ -1,0 +1,111 @@
+#!/usr/bin/python3
+
+import json
+import requests
+import datetime
+
+import matplotlib.pyplot
+import matplotlib.dates
+import math
+from matplotlib import rcParams
+from matplotlib.patches import Rectangle
+
+from rpy2.robjects.packages import importr
+import rpy2.robjects as robjects
+
+
+now = datetime.datetime.now()
+starttimestamp = datetime.datetime(2020, 3, 2, 0, 0)
+days_to_present = (now - starttimestamp).days
+days = [starttimestamp + datetime.timedelta(days=days_elapsed) for days_elapsed in range(days_to_present)]
+
+robjects.r('source(\'./nowcasting_covid19_saxony.R\')');
+
+ncs_df = robjects.r['ncs_df']
+print(ncs_df)
+
+nowcasting_predicted = [0] * days_to_present
+nowcasting_predicted_lower = [0] * days_to_present
+nowcasting_predicted_upper = [0] * days_to_present
+for day_number in range(0, len(ncs_df[0])):
+  day = datetime.datetime(1970, 1, 1, 0, 0) + datetime.timedelta(days=int(ncs_df[0][day_number]))
+  days_since_start = (day - starttimestamp).days
+  nowcasting_predicted[days_since_start] = ncs_df[2][day_number] - ncs_df[1][day_number]
+  nowcasting_predicted_lower[days_since_start] = ncs_df[2][day_number] - ncs_df[3][day_number]
+  nowcasting_predicted_upper[days_since_start] = ncs_df[4][day_number] - ncs_df[2][day_number]
+  print(day, days_since_start, nowcasting_predicted[days_since_start], nowcasting_predicted_lower[days_since_start], nowcasting_predicted_upper[days_since_start])
+
+def get_data_from_json_url(url, attribute_day, attribute_data):
+  data_json = requests.get(url)
+
+  data = json.loads(data_json.content)['features']
+
+  #print(data_diagnosis_delay['features'])
+  
+  day_entries = [0] * days_to_present
+  for day_entry in data:
+    day_attributes = day_entry['attributes']
+    date = datetime.datetime.fromtimestamp(day_attributes[attribute_day] / 1000)
+    days_since_start = (date - starttimestamp).days
+    print(date.strftime('%Y-%m-%d'), day_attributes[attribute_data])
+    day_entries[days_since_start] = day_attributes[attribute_data]
+
+  return day_entries
+
+url_diagnosis_delay = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+refdatum%3Cmeldedatum&objectIds=&time=&resultType=none&outFields=Meldedatum%2CAnzahlFallSumme%2Cmean&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Meldedatum&groupByFieldsForStatistics=Meldedatum&outStatistics=%5B%0D%0A++%7B%0D%0A++++statisticType%3A+%22avg%22%2C%0D%0A++++onStatisticField%3A+%22Meldedatum+-+Refdatum%22%2C+%0D%0A++++outStatisticFieldName%3A+%22Verzug%22%0D%0A++%7D%2C%0D%0A++%7B%0D%0A++++statisticType%3A+%22sum%22%2C%0D%0A++++onStatisticField%3A+%22AnzahlFall%22%2C%0D%0A++++outStatisticFieldName%3A+%22AnzahlFallSumme%22%0D%0A++%7D%0D%0A%5D&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token='
+
+print("\nDiagnoseverzug: \n")
+diagnosis_delay = get_data_from_json_url(url_diagnosis_delay, 'Meldedatum', 'Verzug')
+
+url_onset_symptoms = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+refdatum%3C%3Emeldedatum&objectIds=&time=&resultType=none&outFields=&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Refdatum&groupByFieldsForStatistics=Refdatum&outStatistics=%5B%0D%0A++%7B%0D%0A++++statisticType%3A+%22sum%22%2C%0D%0A++++onStatisticField%3A+%22AnzahlFall%22%2C%0D%0A++++outStatisticFieldName%3A+%22AnzahlFallSumme%22%0D%0A++%7D%0D%0A%5D&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token='
+
+print("\nErkrankungsfälle: \n")
+onset_symptoms = get_data_from_json_url(url_onset_symptoms, 'Refdatum', 'AnzahlFallSumme')
+
+url_onset_symptoms_unknown = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+refdatum%3Dmeldedatum&objectIds=&time=&resultType=none&outFields=&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Refdatum&groupByFieldsForStatistics=Refdatum&outStatistics=%5B%0D%0A++%7B%0D%0A++++statisticType%3A+%22sum%22%2C%0D%0A++++onStatisticField%3A+%22AnzahlFall%22%2C%0D%0A++++outStatisticFieldName%3A+%22AnzahlFallSumme%22%0D%0A++%7D%0D%0A%5D&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token='
+
+print("\nErkrankungsfälle mit unbekanntem Erkrankungsdatum: \n")
+onset_symptoms_unknown = get_data_from_json_url(url_onset_symptoms_unknown, 'Refdatum', 'AnzahlFallSumme')
+
+# move unkown symptoms cases to imputed values
+onset_symptoms_imputed = [0] * days_to_present
+for reporting_date in range(0, len(onset_symptoms_unknown)):
+  delay = diagnosis_delay[reporting_date]
+  onset_symptoms_date = reporting_date - int(round(delay))
+  if onset_symptoms_date >= 0:
+    onset_symptoms_imputed[onset_symptoms_date] = onset_symptoms_unknown[reporting_date]
+
+xticsdatetimes = [starttimestamp + datetime.timedelta(days=days_elapsed) for days_elapsed in range(days_to_present)]
+xticslabels = [date.strftime('%d') for date in xticsdatetimes]
+
+dates = matplotlib.dates.date2num(days)
+xticsdates = matplotlib.dates.date2num(xticsdatetimes)
+
+onset_symptoms_reported_imputed = [ onset_symptoms[i] + onset_symptoms_imputed[i] for i in range(0, len(onset_symptoms_imputed)) ]
+
+fig, ax = matplotlib.pyplot.subplots()
+ax.bar(dates, onset_symptoms, color='#33a0a0', label="tägliche Neuerkrankungen (gemeldetes Datum)")
+ax.bar(dates, onset_symptoms_imputed, bottom=onset_symptoms, color='#d0d043', label="tägliche Neuerkrankungen (imputiertes Datum)")
+ax.bar(dates, nowcasting_predicted, bottom=onset_symptoms_reported_imputed, yerr = [nowcasting_predicted_lower, nowcasting_predicted_upper], color='#d95543', label="tägliche Neuerkrankungen (Nowcasting)")
+ax.xaxis_date()
+matplotlib.pyplot.xticks(ticks=xticsdates, labels=xticslabels, rotation='horizontal')
+for tick in ax.get_xticklabels():
+    tick.set_fontstretch('condensed')
+for label in ax.xaxis.get_ticklabels()[::2]:
+    label.set_visible(False)
+    
+matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper right')
+
+ax.set_xlabel('Erkrankungsdatum (März/April 2020)')
+ax.set_ylabel('Anzahl COVID-19-Neuerkrankungen')
+
+matplotlib.pyplot.xlim(left=matplotlib.dates.date2num(datetime.datetime(2020, 3, 4, 12, 0)))
+matplotlib.pyplot.xlim(right=matplotlib.dates.date2num(datetime.datetime(now.year, now.month, now.day, 12) - datetime.timedelta(days=4)))
+matplotlib.pyplot.title("Wirkung der SARS-CoV-2-Eindämmungsmaßnahmen in Sachsen")
+
+ax.text(1.1, -0.13, 'Stand: ' + now.strftime("%d.%m.%Y, %H:%M"), verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes, fontsize=5)
+ax.text(-0.14, -0.13, 'Datenquelle: Robert Koch-Institut (RKI), dl-de/by-2-0\nDarstellung: @IGrundrechte (Twitter), CC BY-SA 4.0', verticalalignment='bottom', horizontalalignment='left', transform=ax.transAxes, fontsize=5)
+
+
+matplotlib.pyplot.savefig("../nowcasting_" + now.strftime("%Y-%m-%d_%H-%M") + ".png", dpi=200)
+matplotlib.pyplot.savefig("../nowcasting-latest.png", dpi=200)
