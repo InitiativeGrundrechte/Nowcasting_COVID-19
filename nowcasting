@@ -11,6 +11,7 @@ from matplotlib import rcParams
 from matplotlib.patches import Rectangle
 
 from rpy2.robjects.packages import importr
+from rpy2.robjects.vectors import DataFrame
 import rpy2.robjects as robjects
 
 
@@ -40,8 +41,6 @@ def get_data_from_json_url(url, attribute_day, attribute_data):
 
   data = json.loads(data_json.content)['features']
 
-  #print(data_diagnosis_delay['features'])
-
   day_entries = [0] * days_to_present
   for day_entry in data:
     day_attributes = day_entry['attributes']
@@ -57,8 +56,6 @@ def create_delay_statistics_from_json_url(url):
 
   data = json.loads(data_json.content)['features']
 
-  #print(data_diagnosis_delay['features'])
-
   day_entries = [[]] * days_to_present
   for case_entry in data:
     case_attributes = case_entry['attributes']
@@ -69,6 +66,7 @@ def create_delay_statistics_from_json_url(url):
     days_since_start = (reporting_date - starttimestamp).days
     day_entries[days_since_start].append(reporting_delay)
 
+  print(day_entries)
   return day_entries
 
 url_diagnosis_delay = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+isterkrankungsbeginn%3D1&objectIds=&time=&resultType=none&outFields=Meldedatum%2CRefdatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Meldedatum&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token='
@@ -111,6 +109,7 @@ dates = matplotlib.dates.date2num(days)
 xticsdates = matplotlib.dates.date2num(xticsdatetimes)
 
 onset_symptoms_reported_imputed = [ onset_symptoms[i] + onset_symptoms_imputed[i] for i in range(0, len(onset_symptoms_imputed)) ]
+onset_symptoms_reported_imputed_nowcast = [ onset_symptoms[i] + onset_symptoms_imputed[i] + nowcasting_predicted[i] for i in range(0, len(onset_symptoms_imputed)) ]
 
 fig, ax = matplotlib.pyplot.subplots()
 ax.bar(dates, onset_symptoms, color='#33a0a0', label="tägliche Neuerkrankungen (gemeldetes Datum)")
@@ -138,3 +137,24 @@ ax.text(-0.14, -0.13, 'Datenquelle: Robert Koch-Institut (RKI), dl-de/by-2-0\nDa
 
 matplotlib.pyplot.savefig("../nowcasting_" + now.strftime("%Y-%m-%d_%H-%M") + ".png", dpi=200)
 matplotlib.pyplot.savefig("../nowcasting-latest.png", dpi=200)
+
+
+d = {'I': robjects.IntVector(onset_symptoms_reported_imputed_nowcast), 'dates': robjects.FloatVector(range(0,len(onset_symptoms_reported_imputed_nowcast)))}
+dataf = robjects.DataFrame(d)
+
+EpiEstim = importr('EpiEstim')
+res_parametric_si = EpiEstim.estimate_R(dataf, method="parametric_si", config=EpiEstim.make_config(robjects.vectors.ListVector({'mean_si' : 5.0, 'std_si' : 1.9})))
+mean_r = res_parametric_si[0][2]
+days_for_r = [days[int(0.5 * (res_parametric_si[0][1][i] + res_parametric_si[0][0][i]))] for i in range(0, len(res_parametric_si[0][0]))]
+dates_for_r = matplotlib.dates.date2num(days_for_r)
+
+print(res_parametric_si)
+
+ax2 = ax.twinx()
+color = 'tab:blue'
+ax2.set_ylabel('Effektive Reproduktionszahl')  # we already handled the x-label with ax1
+ax2.plot(dates_for_r, mean_r, color=color, label="effektive Reproduktionszahl")
+matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper right')
+
+matplotlib.pyplot.savefig("../nowcasting-r_" + now.strftime("%Y-%m-%d_%H-%M") + ".png", dpi=200)
+matplotlib.pyplot.savefig("../nowcasting-r-latest.png", dpi=200)
