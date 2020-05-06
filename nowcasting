@@ -112,9 +112,9 @@ onset_symptoms_reported_imputed = [ onset_symptoms[i] + onset_symptoms_imputed[i
 onset_symptoms_reported_imputed_nowcast = [ onset_symptoms[i] + onset_symptoms_imputed[i] + nowcasting_predicted[i] for i in range(0, len(onset_symptoms_imputed)) ]
 
 fig, ax = matplotlib.pyplot.subplots()
-ax.bar(dates, onset_symptoms, color='#33a0a0', label="tägliche Neuerkrankungen (gemeldetes Datum)")
-ax.bar(dates, onset_symptoms_imputed, bottom=onset_symptoms, color='#d0d043', label="tägliche Neuerkrankungen (imputiertes Datum)")
-ax.bar(dates, nowcasting_predicted, bottom=onset_symptoms_reported_imputed, yerr = [nowcasting_predicted_lower, nowcasting_predicted_upper], color='#d95543', label="tägliche Neuerkrankungen (Nowcasting)")
+ax.bar(dates, onset_symptoms, color='#2f86bb', label="Neuerkrankungen (gemeldetes Datum)")
+ax.bar(dates, onset_symptoms_imputed, bottom=onset_symptoms, color='#5ea5cf', label="Neuerkrankungen (imputiertes Datum)")
+ax.bar(dates, nowcasting_predicted, bottom=onset_symptoms_reported_imputed, yerr = [nowcasting_predicted_lower, nowcasting_predicted_upper], color='#db855c', label="Neuerkrankungen (Nowcasting)")
 ax.xaxis_date()
 matplotlib.pyplot.xticks(ticks=xticsdates, labels=xticslabels, rotation='horizontal')
 for tick in ax.get_xticklabels():
@@ -122,7 +122,7 @@ for tick in ax.get_xticklabels():
 for label in ax.xaxis.get_ticklabels()[::2]:
     label.set_visible(False)
     
-matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper right')
+matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper left')
 
 ax.set_xlabel('Erkrankungsdatum (März/April 2020)')
 ax.set_ylabel('Anzahl COVID-19-Neuerkrankungen')
@@ -151,10 +151,10 @@ dates_for_r = matplotlib.dates.date2num(days_for_r)
 print(res_parametric_si)
 
 ax2 = ax.twinx()
-color = 'tab:blue'
 ax2.set_ylabel('Effektive Reproduktionszahl')  # we already handled the x-label with ax1
-ax2.plot(dates_for_r, mean_r, color=color, label="effektive Reproduktionszahl")
+ax2.plot(dates_for_r, mean_r, color="#8a20a2", label="effektive Reproduktionszahl")
+ax2.plot(dates_for_r, quantile0_025_r, color="#bb96c4", linewidth=0.7)
+ax2.plot(dates_for_r, quantile0_975_r, color="#bb96c4", linewidth=0.7)
 matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper right')
-
 matplotlib.pyplot.savefig("../nowcasting-r_" + now.strftime("%Y-%m-%d_%H-%M") + ".png", dpi=200)
 matplotlib.pyplot.savefig("../nowcasting-r-latest.png", dpi=200)
