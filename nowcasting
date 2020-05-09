@@ -124,7 +124,7 @@ for label in ax.xaxis.get_ticklabels()[::2]:
     
 matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper left')
 
-ax.set_xlabel('Erkrankungsdatum (März/April 2020)')
+ax.set_xlabel('Erkrankungsdatum (März/April/Mai 2020)')
 ax.set_ylabel('Anzahl COVID-19-Neuerkrankungen')
 
 matplotlib.pyplot.xlim(left=matplotlib.dates.date2num(datetime.datetime(2020, 3, 4, 12, 0)))
@@ -132,7 +132,7 @@ matplotlib.pyplot.xlim(right=matplotlib.dates.date2num(datetime.datetime(now.yea
 matplotlib.pyplot.title("Wirkung der SARS-CoV-2-Eindämmungsmaßnahmen in Sachsen")
 
 ax.text(1.1, -0.13, 'Stand: ' + now.strftime("%d.%m.%Y, %H:%M"), verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes, fontsize=5)
-ax.text(-0.14, -0.13, 'Datenquelle: Robert Koch-Institut (RKI), dl-de/by-2-0\nDarstellung: @IGrundrechte (Twitter), CC BY-SA 4.0', verticalalignment='bottom', horizontalalignment='left', transform=ax.transAxes, fontsize=5)
+ax.text(-0.14, -0.13, 'Datenquelle: Robert Koch-Institut, dl-de/by-2-0\nDarstellung: @IGrundrechte (Twitter), CC BY-SA 4.0', verticalalignment='bottom', horizontalalignment='left', transform=ax.transAxes, fontsize=5)
 
 
 matplotlib.pyplot.savefig("../nowcasting_" + now.strftime("%Y-%m-%d_%H-%M") + ".png", dpi=200)
@@ -144,13 +144,19 @@ dataf = robjects.DataFrame(d)
 
 EpiEstim = importr('EpiEstim')
 res_parametric_si = EpiEstim.estimate_R(dataf, method="parametric_si", config=EpiEstim.make_config(robjects.vectors.ListVector({'mean_si' : 5.0, 'std_si' : 1.9})))
-mean_r = res_parametric_si[0][2]
-days_for_r = [days[int(0.5 * (res_parametric_si[0][1][i] + res_parametric_si[0][0][i]))] for i in range(0, len(res_parametric_si[0][0]))]
+# copy values from data frame to python arrays; omit first and last values (may be wrong)
+start_index_r = 2
+end_index_r = -3
+mean_r = res_parametric_si[0][2][start_index_r:end_index_r]
+quantile0_025_r = res_parametric_si[0][4][start_index_r:end_index_r]
+quantile0_975_r = res_parametric_si[0][9][start_index_r:end_index_r]
+days_for_r = [days[int(0.5 * (res_parametric_si[0][1][i] + res_parametric_si[0][0][i]))] for i in range(start_index_r, len(res_parametric_si[0][0][0:end_index_r]))]
 dates_for_r = matplotlib.dates.date2num(days_for_r)
 
 print(res_parametric_si)
 
 ax2 = ax.twinx()
+ax2.set_ylim(top=5)
 ax2.set_ylabel('Effektive Reproduktionszahl')  # we already handled the x-label with ax1
 ax2.plot(dates_for_r, mean_r, color="#8a20a2", label="effektive Reproduktionszahl")
 ax2.plot(dates_for_r, quantile0_025_r, color="#bb96c4", linewidth=0.7)
