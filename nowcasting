@@ -20,6 +20,7 @@ starttimestamp = datetime.datetime(2020, 3, 2, 0, 0)
 days_to_present = (now - starttimestamp).days
 days = [starttimestamp + datetime.timedelta(days=days_elapsed) for days_elapsed in range(days_to_present)]
 
+# execute R script for nowcasting and retrieve results
 robjects.r('source(\'./nowcasting_covid19_saxony.R\')');
 
 ncs_df = robjects.r['ncs_df']
@@ -36,6 +37,7 @@ for day_number in range(0, len(ncs_df[0])):
   nowcasting_predicted_upper[days_since_start] = ncs_df[4][day_number] - ncs_df[2][day_number]
   print(day, days_since_start, nowcasting_predicted[days_since_start], nowcasting_predicted_lower[days_since_start], nowcasting_predicted_upper[days_since_start])
 
+# retrieve data for daily symtom onset numbers and imputation
 def get_data_from_json_url(url, attribute_day, attribute_data):
   data_json = requests.get(url)
 
@@ -102,6 +104,7 @@ for reporting_date in range(0, len(onset_symptoms_unknown)):
     case_delay_for_quantile = delay_for_reporting_date[position_in_array]
     add_imputed_case_for_day(reporting_date, case_delay_for_quantile)
 
+# plot data
 xticsdatetimes = [starttimestamp + datetime.timedelta(days=days_elapsed) for days_elapsed in range(days_to_present)]
 xticslabels = [date.strftime('%d') for date in xticsdatetimes]
 
