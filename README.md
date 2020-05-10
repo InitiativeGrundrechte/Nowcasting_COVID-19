@@ -1,0 +1,12 @@
+# Nowcasting der COVID-19-Erkrankungszahlen und Berechnung der Reproduktionszahl für Sachsen
+
+Anhand der [Daten des Robert-Koch-Instituts](https://npgeo-corona-npgeo-de.hub.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0) werden die täglichen COVID-19-Erkrankungszahlen für Sachsen dargestellt.
+
+Für Fälle, bei denen das Erkrankungsdatum nicht übermittelt wurde, wird es imputiert, d.h. anhand des Meldedatums geschätzt. Dazu werden alle am gleichen Tag gemeldeten Fälle mit bekanntem Erkankungsdatum herangezogen. Für die Fälle mit unbekanntem Erkrankungsdatum wird für die Differenz zwischen Melde- und Erkrankungsdatum die gleiche Verteilung wie für die Fälle mit bekanntem Erkrankungsdatum angenommen. Anhand dieser Verteilung werden die imputierten Erkankungsdaten zugewiesen.
+
+Die Auswertung bezieht sich immer auf das aktuelle Datum als Stichtag. Aufgrund der Diagnoseverzögerung werden in den nächsten Tagen noch einige Fälle mit einem Erkrankungsdatum in der Vergangenheit nachgemeldet werden. Das Nowcasting schätzt die Anzahl dieser Fälle basierend auf der Diagnoseverzögerung in der Vergangenheit.
+
+Für das Nowcasting wird das Verfahren nach Glöckner, Krause & Höhle: “Now-casting the COVID-19 epidemic: The use case of Japan, March 2020”. medRxiv 2020.03.18.20037473; doi:
+<https://doi.org/10.1101/2020.03.18.20037473> or [Link](https://www.medrxiv.org/content/10.1101/2020.03.18.20037473v1) verwendet.
+
+Die Berechnung der Reproduktionszahl erfolgt mit dem R-Paket EpiEstim nach der vom Institut für Medizininformatik der Universität Leipzig vorgeschlagenen [Methode](https://www.genstat.imise.uni-leipzig.de/sites/www.genstat.imise.uni-leipzig.de/files/files/uploads/Bulletin_covid19_sachsen_leipzig_2020_04_07_webVersion3.pdf). EpiEstim wird in Anne Cori, Neil M. Ferguson, Christophe Fraser, Simon Cauchemez: “A New Framework and Software to Estimate Time-Varying Reproduction Numbers During Epidemics”,  American Journal of Epidemiology, Band 178, Ausgabe 9, November 2013, Seiten 1505–1512, <https://doi.org/10.1093/aje/kwt133> vorgestellt. Als Parameter für die Berechnung werden die von Luca Ferretti, Chris Wymant, Michelle Kendall, Lele Zhao, Anel Nurtay, Lucie Abeler-Dörner, Michael Parker, David Bonsall, Christophe Fraser: Quantifying SARS-CoV-2 transmission suggests epidemic control with digital contact tracing. Science.  08. Mai 2020: Band 368, Ausgabe 6491, eabb6936, DOI: <https://doi.org/10.1126/science.abb6936> vorgeschlagenen genutzt (mittlere Inkubationszeit 5,0 Tage, Standardabweichung 1,9 Tage).
