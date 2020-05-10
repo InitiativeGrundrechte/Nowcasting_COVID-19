@@ -64,14 +64,16 @@ def create_delay_statistics_from_json_url(url):
     reporting_date = datetime.datetime.fromtimestamp(case_attributes['Meldedatum'] / 1000)
     onset_symptoms_date = datetime.datetime.fromtimestamp(case_attributes['Refdatum'] / 1000)
     reporting_delay = (reporting_date - onset_symptoms_date).days
+    case_count = int(case_attributes['AnzahlFall'])
 
     days_since_start = (reporting_date - starttimestamp).days
-    day_entries[days_since_start].append(reporting_delay)
+    for i in range(0, case_count):
+      day_entries[days_since_start].append(reporting_delay)
 
   print(day_entries)
   return day_entries
 
-url_diagnosis_delay = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+isterkrankungsbeginn%3D1&objectIds=&time=&resultType=none&outFields=Meldedatum%2CRefdatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Meldedatum&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=standard&f=pjson&token='
+url_diagnosis_delay = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+isterkrankungsbeginn%3D1&objectIds=&time=&resultType=none&outFields=Meldedatum%2CRefdatum%2CAnzahlFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Meldedatum&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='
 
 print("\nDiagnoseverzug: \n")
 diagnosis_delay = create_delay_statistics_from_json_url(url_diagnosis_delay)

@@ -22,11 +22,12 @@ our_facet_theme <- theme(strip.background = element_rect(fill = "#155540"),
 now <- as.POSIXlt(Sys.time())
 last_valid_date <- now - days(2) # Meldeverzug
 
-data <- fromJSON(paste0('https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+refdatum%3C%3Emeldedatum+and+meldedatum%3C\'', format(last_valid_date, "%Y-%m-%d"), '\'&objectIds=&time=&resultType=none&outFields=Refdatum%2CMeldedatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Refdatum&groupByFieldsForStatistics=Refdatum&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='))
+data <- fromJSON(paste0('https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=%28neuerfall%3D0+or+neuerfall%3D1%29+and+idbundesland%3D14+and+refdatum%3C%3Emeldedatum+and+meldedatum%3C\'', format(last_valid_date, "%Y-%m-%d"), '\'&objectIds=&time=&resultType=none&outFields=Refdatum%2CMeldedatum%2CAnzahlFall&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=Refdatum&groupByFieldsForStatistics=Refdatum&outStatistics=&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token='))
 
 df2 <- flatten(data$features)
-df2 <- transmute(df2, date_confirmation = format(as.Date(as.POSIXct(`attributes.Meldedatum` / 1000, origin="1970-01-01")), "%d.%m.%Y"), date_onset_symptoms = format(as.Date(as.POSIXct(`attributes.Refdatum` / 1000, origin="1970-01-01")), "%d.%m.%Y"))
-df <- df2 %>% mutate_at(vars(contains("date")), dmy)
+df_expanded <- df2[rep(row.names(df2), df2$attributes.AnzahlFall), 1:2]
+df_transmuted <- transmute(df_expanded, date_confirmation = format(as.Date(as.POSIXct(`attributes.Meldedatum` / 1000, origin="1970-01-01")), "%d.%m.%Y"), date_onset_symptoms = format(as.Date(as.POSIXct(`attributes.Refdatum` / 1000, origin="1970-01-01")), "%d.%m.%Y"))
+df <- df_transmuted %>% mutate_at(vars(contains("date")), dmy)
 
 delay_cutoff <- 21 # days
 
