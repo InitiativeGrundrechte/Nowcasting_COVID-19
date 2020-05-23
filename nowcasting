@@ -124,8 +124,10 @@ ax.xaxis_date()
 matplotlib.pyplot.xticks(ticks=xticsdates, labels=xticslabels, rotation='horizontal')
 for tick in ax.get_xticklabels():
     tick.set_fontstretch('condensed')
-for label in ax.xaxis.get_ticklabels()[::2]:
+for label in ax.xaxis.get_ticklabels():
     label.set_visible(False)
+for label in ax.xaxis.get_ticklabels()[::4]:
+    label.set_visible(True)
     
 matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper left')
 
