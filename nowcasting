@@ -107,8 +107,13 @@ for reporting_date in range(0, len(onset_symptoms_unknown)):
     add_imputed_case_for_day(reporting_date, case_delay_for_quantile)
 
 # plot data
-xticsdatetimes = [starttimestamp + datetime.timedelta(days=days_elapsed) for days_elapsed in range(days_to_present)]
-xticslabels = [date.strftime('%d') for date in xticsdatetimes]
+xticsdatetimes = []
+xticslabels = []
+for days_elapsed in range(days_to_present):
+  xticdate = starttimestamp + datetime.timedelta(days=days_elapsed)
+  if (xticdate.day == 1 or xticdate.day == 10 or xticdate.day == 20):
+    xticsdatetimes.append(xticdate)
+    xticslabels.append(xticdate.strftime('%d.%m.'))
 
 dates = matplotlib.dates.date2num(days)
 xticsdates = matplotlib.dates.date2num(xticsdatetimes)
@@ -126,12 +131,12 @@ for tick in ax.get_xticklabels():
     tick.set_fontstretch('condensed')
 for label in ax.xaxis.get_ticklabels():
     label.set_visible(False)
-for label in ax.xaxis.get_ticklabels()[::5]:
+for label in ax.xaxis.get_ticklabels()[2::3]:
     label.set_visible(True)
     
 matplotlib.pyplot.legend(prop = {'stretch': 'condensed', 'size': 9}, loc='upper left')
 
-ax.set_xlabel('Erkrankungsdatum (März–Juli 2020)')
+ax.set_xlabel('Erkrankungsdatum')
 ax.set_ylabel('Anzahl COVID-19-Neuerkrankungen')
 
 matplotlib.pyplot.xlim(left=matplotlib.dates.date2num(datetime.datetime(2020, 3, 4, 12, 0)))
