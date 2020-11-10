@@ -90,7 +90,7 @@ onset_symptoms_unknown = get_data_from_json_url(url_onset_symptoms_unknown, 'Ref
 
 def add_imputed_case_for_day(reporting_date, delay):
   onset_symptoms_date_imputed = reporting_date - delay
-  if onset_symptoms_date_imputed >= 0:
+  if onset_symptoms_date_imputed >= 0 and onset_symptoms_date_imputed < days_to_present:
     onset_symptoms_imputed[onset_symptoms_date_imputed] += 1
 
 # move unkown symptoms cases to imputed values
