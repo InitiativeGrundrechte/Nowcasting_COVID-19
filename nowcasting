@@ -159,7 +159,7 @@ EpiEstim = importr('EpiEstim')
 res_parametric_si = EpiEstim.estimate_R(dataf, method="parametric_si", config=EpiEstim.make_config(robjects.vectors.ListVector({'mean_si' : 5.0, 'std_si' : 1.9})))
 # copy values from data frame to python arrays; omit first and last values (may be wrong)
 start_index_r = 2
-end_index_r = -3
+end_index_r = -7
 mean_r = res_parametric_si[0][2][start_index_r:end_index_r]
 quantile0_025_r = res_parametric_si[0][4][start_index_r:end_index_r]
 quantile0_975_r = res_parametric_si[0][9][start_index_r:end_index_r]
