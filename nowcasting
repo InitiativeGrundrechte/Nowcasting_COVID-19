@@ -14,6 +14,7 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects.vectors import DataFrame
 import rpy2.robjects as robjects
 
+last_days_not_shown = 7
 
 now = datetime.datetime.now()
 starttimestamp = datetime.datetime(2020, 3, 2, 0, 0)
@@ -124,7 +125,7 @@ onset_symptoms_reported_imputed_nowcast = [ onset_symptoms[i] + onset_symptoms_i
 fig, ax = matplotlib.pyplot.subplots()
 ax.bar(dates, onset_symptoms, color='#2f86bb', label="Neuerkrankungen (gemeldetes Datum)")
 ax.bar(dates, onset_symptoms_imputed, bottom=onset_symptoms, color='#5ea5cf', label="Neuerkrankungen (imputiertes Datum)")
-ax.bar(dates, nowcasting_predicted, bottom=onset_symptoms_reported_imputed, yerr = [nowcasting_predicted_lower, nowcasting_predicted_upper], color='#db855c', label="Neuerkrankungen (Nowcasting)")
+ax.bar(dates, nowcasting_predicted, bottom=onset_symptoms_reported_imputed, color='#db855c', label="Neuerkrankungen (Nowcasting)")
 ax.xaxis_date()
 matplotlib.pyplot.xticks(ticks=xticsdates, labels=xticslabels, rotation='horizontal')
 for tick in ax.get_xticklabels():
@@ -140,7 +141,7 @@ ax.set_xlabel('Erkrankungsdatum')
 ax.set_ylabel('Anzahl COVID-19-Neuerkrankungen')
 
 matplotlib.pyplot.xlim(left=matplotlib.dates.date2num(datetime.datetime(2020, 3, 4, 12, 0)))
-matplotlib.pyplot.xlim(right=matplotlib.dates.date2num(datetime.datetime(now.year, now.month, now.day, 12) - datetime.timedelta(days=4)))
+matplotlib.pyplot.xlim(right=matplotlib.dates.date2num(datetime.datetime(now.year, now.month, now.day, 12) - datetime.timedelta(days=last_days_not_shown)))
 matplotlib.pyplot.title("Wirkung der SARS-CoV-2-Eindämmungsmaßnahmen in Sachsen")
 
 ax.text(1.1, -0.13, 'Stand: ' + now.strftime("%d.%m.%Y, %H:%M"), verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes, fontsize=5)
